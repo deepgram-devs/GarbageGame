@@ -1,0 +1,61 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://Scenes/Game.gd" type="Script" id=2]
+
+[sub_resource type="CircleShape2D" id=1]
+radius = 32.0
+
+[sub_resource type="CircleShape2D" id=2]
+radius = 32.0
+
+[sub_resource type="CircleShape2D" id=3]
+radius = 32.0
+
+[sub_resource type="CircleShape2D" id=4]
+radius = 32.0
+
+[node name="Game" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="Area1" type="Area2D" parent="."]
+position = Vector2( 520, 120 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area1"]
+shape = SubResource( 1 )
+
+[node name="Area2" type="Area2D" parent="."]
+position = Vector2( 520, 360 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2"]
+shape = SubResource( 2 )
+
+[node name="Area3" type="Area2D" parent="."]
+position = Vector2( 120, 360 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area3"]
+shape = SubResource( 3 )
+
+[node name="Area4" type="Area2D" parent="."]
+position = Vector2( 120, 120 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area4"]
+shape = SubResource( 4 )
+
+[node name="AntSpawnTimer" type="Timer" parent="."]
+autostart = true
+
+[node name="BeetleSpawnTimer" type="Timer" parent="."]
+wait_time = 2.0
+autostart = true
+
+[node name="WasteTimer" type="Timer" parent="."]
+wait_time = 2.0
+autostart = true
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2( 320, 240 )
+current = true
+
+[connection signal="timeout" from="AntSpawnTimer" to="." method="_on_AntSpawnTimer_timeout"]
+[connection signal="timeout" from="BeetleSpawnTimer" to="." method="_on_BeetleSpawnTimer_timeout"]
+[connection signal="timeout" from="WasteTimer" to="." method="_on_WasteTimer_timeout"]
