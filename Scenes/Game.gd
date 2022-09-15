@@ -11,6 +11,13 @@ func _ready():
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
+		if event.scancode == KEY_I:
+			var ants = get_tree().get_nodes_in_group("Ant")
+			var wastes = get_tree().get_nodes_in_group("Waste")
+			for ant in ants:
+				print(ant.state)
+			print("")
+			
 		if event.scancode == KEY_A:
 			selected_faction = SelectedFaction.ANT
 		if event.scancode == KEY_B:
@@ -20,23 +27,27 @@ func _input(event):
 			if event.scancode == KEY_1:
 				var ants = get_tree().get_nodes_in_group("Ant")
 				for ant in ants:
-					ant.area_position = $Area1.position
-					ant.state = ant.State.GOING_TO_AREA
+					if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
+						ant.area_position = $Area1.position
+						ant.state = ant.State.GOING_TO_AREA
 			if event.scancode == KEY_2:
 				var ants = get_tree().get_nodes_in_group("Ant")
 				for ant in ants:
-					ant.area_position = $Area2.position
-					ant.state = ant.State.GOING_TO_AREA
+					if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
+						ant.area_position = $Area2.position
+						ant.state = ant.State.GOING_TO_AREA
 			if event.scancode == KEY_3:
 				var ants = get_tree().get_nodes_in_group("Ant")
 				for ant in ants:
-					ant.area_position = $Area3.position
-					ant.state = ant.State.GOING_TO_AREA
+					if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
+						ant.area_position = $Area3.position
+						ant.state = ant.State.GOING_TO_AREA
 			if event.scancode == KEY_4:
 				var ants = get_tree().get_nodes_in_group("Ant")
 				for ant in ants:
-					ant.area_position = $Area4.position
-					ant.state = ant.State.GOING_TO_AREA
+					if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
+						ant.area_position = $Area4.position
+						ant.state = ant.State.GOING_TO_AREA
 					
 		if selected_faction == SelectedFaction.BEETLE:
 			if event.scancode == KEY_1:
@@ -101,3 +112,18 @@ func _on_WasteTimer_timeout():
 	var waste = load("res://Scenes/Waste.tscn").instance()
 	add_child(waste)
 	waste.position = Vector2(rng.randf_range(0, 640), 0)
+
+func _process(_delta):
+	var ants = get_tree().get_nodes_in_group("Ant")
+	var wastes = get_tree().get_nodes_in_group("Waste")
+
+	for ant in ants:
+		for waste in wastes:
+			if !waste.being_collected and !waste.being_carried and (ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE):
+				# if this ant isn't collecting waste or moving it to the mushroom,
+				# and this waste isn't being carried or collected,
+				# and this ant is close to this waste, set this ant to collect this waste
+				if ant.global_position.distance_to(waste.global_position) < 200.0:
+					ant.waste = waste
+					ant.state = ant.State.COLLECTING_GARBAGE
+					waste.being_collected = true

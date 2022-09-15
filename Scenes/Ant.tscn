@@ -8,6 +8,7 @@ radius = 5.0
 height = 8.0
 
 [node name="Ant" type="RigidBody2D" groups=["Ant"]]
+collision_layer = 2
 mode = 2
 gravity_scale = 0.0
 contacts_reported = 4
