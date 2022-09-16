@@ -11,16 +11,16 @@ pub(crate) struct Waste {
     #[property]
     being_collected: bool,
 
-    // HACK - should maybe store the base? But need to store `Ref` and I don't get that in new?
-    pub(crate) global_position: Vector2,
+    // SUPERHACK - :crying_blood:
+    pub(crate) base: Option<Ref<RigidBody2D>>,
 }
 
 impl Waste {
-    fn new(base: &RigidBody2D) -> Self {
+    fn new(base: Ref<RigidBody2D>) -> Self {
         Waste {
             being_carried: false,
             being_collected: false,
-            global_position: base.global_position(),
+            base,
         }
     }
 }
@@ -32,6 +32,5 @@ impl Waste {
         if base.position().y > 240.0 {
             base.set_gravity_scale(0.0);
         }
-        self.global_position = base.global_position();
     }
 }

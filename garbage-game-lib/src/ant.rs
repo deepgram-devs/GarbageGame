@@ -1,6 +1,6 @@
 use crate::Waste;
 
-use gdnative::api::{PinJoint2D, RigidBody2D};
+use gdnative::api::{PhysicsBody2D, PinJoint2D, RigidBody2D};
 use gdnative::prelude::*;
 
 const FACTOR: f32 = 100.0;
@@ -54,7 +54,9 @@ impl Ant {
                 }
             }
             State::CollectingGarbage(waste) => {
-                let direction = (waste.global_position - base.global_position()).normalized();
+                let waste_base = unsafe { waste.base.assume_safe() };
+                let direction =
+                    (waste_base.global_position() - base.global_position()).normalized();
                 base.apply_central_impulse(direction * FACTOR * delta)
             }
             State::GoingToMushroom {
@@ -76,25 +78,31 @@ impl Ant {
             _ => todo!(),
         }
     }
+
+    #[method]
+    fn _on_ant_body_entered(&mut self, #[base] base: &RigidBody2D, body: Ref<PhysicsBody2D>) {
+        if let State::CollectingGarbage(waste) = &mut self.state {
+            let body = unsafe { body.assume_safe() };
+            let waste_base = unsafe { waste.base.assume_safe() };
+            if body.get_instance_id() == waste_base.get_instance_id() {
+                // carrying_waste = true;
+                // body.being_carried = true;
+                // body.being_collected = false;
+
+                // // this is kind of a hack for the AI, so that ants don't get stuck colliding into waste being carried by other ants
+                // body.set_collision_layer_bit(0, false);
+                // body.set_collision_layer_bit(1, true);
+
+                // state = State.GOING_TO_MUSHROOM;
+
+                // pin_joint_2d = PinJoint2D.new();
+                // pin_joint_2d.add_to_group("PinJoint2D");
+
+                // pin_joint_2d.set_node_a(self.get_path());
+                // pin_joint_2d.set_node_b(body.get_path());
+
+                // add_child(pin_joint_2d);
+            }
+        }
+    }
 }
-// func _on_Ant_body_entered(body):
-// 	if body.is_in_group("Waste"):
-// 		#if !carrying_waste and !body.being_carried:
-// 		if body == waste:
-// 			carrying_waste = true
-// 			body.being_carried = true
-// 			body.being_collected = false
-//
-// 			# this is kind of a hack for the AI, so that ants don't get stuck colliding into waste being carried by other ants
-// 			body.set_collision_layer_bit(0, false)
-// 			body.set_collision_layer_bit(1, true)
-//
-// 			state = State.GOING_TO_MUSHROOM
-//
-// 			pin_joint_2d = PinJoint2D.new()
-// 			pin_joint_2d.add_to_group("PinJoint2D")
-//
-// 			pin_joint_2d.set_node_a(self.get_path())
-// 			pin_joint_2d.set_node_b(body.get_path())
-//
-// 			add_child(pin_joint_2d)
