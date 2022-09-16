@@ -111,7 +111,7 @@ func _on_WasteTimer_timeout():
 
 	var waste = load("res://Scenes/Waste.tscn").instance()
 	add_child(waste)
-	waste.position = Vector2(rng.randf_range(0, 640), 0)
+	waste.position = Vector2(rng.randf_range(96, 544), 0)
 
 func _process(_delta):
 	var ants = get_tree().get_nodes_in_group("Ant")
