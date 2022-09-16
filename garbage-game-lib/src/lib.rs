@@ -1,38 +1,17 @@
-use gdnative::api::RigidBody2D;
 use gdnative::prelude::*;
+
+pub(crate) mod ant;
+pub(crate) mod game;
+pub(crate) mod waste;
+
+pub(crate) use ant::Ant;
+pub(crate) use game::Game;
+pub(crate) use waste::Waste;
 
 godot_init!(init);
 
-#[derive(NativeClass)]
-#[inherit(RigidBody2D)]
-pub struct Waste {
-    /// Whether this is being carried by an Ant or not.
-    #[property]
-    being_carried: bool,
-    /// Tells if an Ant is moving towards the Waste to collect it
-    #[property]
-    being_collected: bool,
-}
-
-impl Waste {
-    fn new(_base: &RigidBody2D) -> Self {
-        Waste {
-            being_carried: false,
-            being_collected: false,
-        }
-    }
-}
-
-#[methods]
-impl Waste {
-    #[method]
-    fn _physics_process(&self, #[base] base: &RigidBody2D, _delta: f32) {
-        if base.position().y > 240.0 {
-            base.set_gravity_scale(0.0);
-        }
-    }
-}
-
 fn init(handle: InitHandle) {
+    handle.add_class::<Ant>();
+    handle.add_class::<Game>();
     handle.add_class::<Waste>();
 }
