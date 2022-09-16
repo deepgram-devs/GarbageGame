@@ -46,7 +46,6 @@ func _physics_process(delta):
 
 func _on_Ant_body_entered(body):
 	if body.is_in_group("Waste"):
-		#if !carrying_waste and !body.being_carried:
 		if body == waste:
 			carrying_waste = true
 			body.being_carried = true
