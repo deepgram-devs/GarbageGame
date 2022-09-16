@@ -9,6 +9,7 @@ pub struct Waste {
     /// Whether this is being carried by an Ant or not.
     #[property]
     being_carried: bool,
+    /// Tells if an Ant is moving towards the Waste to collect it
     #[property]
     being_collected: bool,
 }
