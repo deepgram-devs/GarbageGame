@@ -10,66 +10,20 @@ func _ready():
 	rng.randomize()
 
 func _input(event):
-	if event is InputEventKey and event.pressed:
-		if event.scancode == KEY_I:
-			var ants = get_tree().get_nodes_in_group("Ant")
-			var wastes = get_tree().get_nodes_in_group("Waste")
-			for ant in ants:
-				print(ant.state)
-			print("")
-			
+	if event is InputEventKey and event.pressed:			
 		if event.scancode == KEY_A:
-			selected_faction = SelectedFaction.ANT
+			$CanvasLayer/MarginContainerAnts/AntsButton.emit_signal("pressed")
 		if event.scancode == KEY_B:
-			selected_faction = SelectedFaction.BEETLE
-		
-		if selected_faction == SelectedFaction.ANT:
-			if event.scancode == KEY_1:
-				var ants = get_tree().get_nodes_in_group("Ant")
-				for ant in ants:
-					if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
-						ant.area_position = $Area1.position
-						ant.state = ant.State.GOING_TO_AREA
-			if event.scancode == KEY_2:
-				var ants = get_tree().get_nodes_in_group("Ant")
-				for ant in ants:
-					if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
-						ant.area_position = $Area2.position
-						ant.state = ant.State.GOING_TO_AREA
-			if event.scancode == KEY_3:
-				var ants = get_tree().get_nodes_in_group("Ant")
-				for ant in ants:
-					if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
-						ant.area_position = $Area3.position
-						ant.state = ant.State.GOING_TO_AREA
-			if event.scancode == KEY_4:
-				var ants = get_tree().get_nodes_in_group("Ant")
-				for ant in ants:
-					if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
-						ant.area_position = $Area4.position
-						ant.state = ant.State.GOING_TO_AREA
-					
-		if selected_faction == SelectedFaction.BEETLE:
-			if event.scancode == KEY_1:
-				var beetles = get_tree().get_nodes_in_group("Beetle")
-				for beetle in beetles:
-					beetle.area_position = $Area1.position
-					beetle.state = beetle.State.GOING_TO_AREA
-			if event.scancode == KEY_2:
-				var beetles = get_tree().get_nodes_in_group("Beetle")
-				for beetle in beetles:
-					beetle.area_position = $Area2.position
-					beetle.state = beetle.State.GOING_TO_AREA
-			if event.scancode == KEY_3:
-				var beetles = get_tree().get_nodes_in_group("Beetle")
-				for beetle in beetles:
-					beetle.area_position = $Area3.position
-					beetle.state = beetle.State.GOING_TO_AREA
-			if event.scancode == KEY_4:
-				var beetles = get_tree().get_nodes_in_group("Beetle")
-				for beetle in beetles:
-					beetle.area_position = $Area4.position
-					beetle.state = beetle.State.GOING_TO_AREA
+			$CanvasLayer/MarginContainerBeetles/BeetlesButton.emit_signal("pressed")
+
+		if event.scancode == KEY_N:
+			$CanvasLayer/MarginContainerNorth/NorthButton.emit_signal("pressed")
+		if event.scancode == KEY_S:
+			$CanvasLayer/MarginContainerSouth/SouthButton.emit_signal("pressed")
+		if event.scancode == KEY_E:
+			$CanvasLayer/MarginContainerEast/EastButton.emit_signal("pressed")
+		if event.scancode == KEY_W:
+			$CanvasLayer/MarginContainerWest/WestButton.emit_signal("pressed")
 
 func _on_AntSpawnTimer_timeout():
 	var ants = get_tree().get_nodes_in_group("Ant")
@@ -79,7 +33,7 @@ func _on_AntSpawnTimer_timeout():
 
 	var new_ant = load("res://Scenes/Ant.tscn").instance()
 	add_child(new_ant)
-	new_ant.position = Vector2(320, 360)
+	new_ant.position = Vector2(200, 360)
 
 	for ant in ants:
 		new_ant.position = ant.position
@@ -95,7 +49,7 @@ func _on_BeetleSpawnTimer_timeout():
 
 	var new_beetle = load("res://Scenes/Beetle.tscn").instance()
 	add_child(new_beetle)
-	new_beetle.position = Vector2(320, 360)
+	new_beetle.position = Vector2(440, 360)
 
 	for beetle in beetles:
 		new_beetle.position = beetle.position
@@ -111,7 +65,7 @@ func _on_WasteTimer_timeout():
 
 	var waste = load("res://Scenes/Waste.tscn").instance()
 	add_child(waste)
-	waste.position = Vector2(rng.randf_range(96, 544), 0)
+	waste.position = Vector2(rng.randf_range(112, 528), 0)
 
 func _process(_delta):
 	var ants = get_tree().get_nodes_in_group("Ant")
@@ -127,3 +81,66 @@ func _process(_delta):
 					ant.waste = waste
 					ant.state = ant.State.COLLECTING_GARBAGE
 					waste.being_collected = true
+
+
+func _on_NorthButton_pressed():
+	if selected_faction == SelectedFaction.ANT:
+		var ants = get_tree().get_nodes_in_group("Ant")
+		for ant in ants:
+			if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
+				ant.area_position = $AreaN.position
+				ant.state = ant.State.GOING_TO_AREA
+
+	if selected_faction == SelectedFaction.BEETLE:
+		var beetles = get_tree().get_nodes_in_group("Beetle")
+		for beetle in beetles:
+			beetle.area_position = $AreaN.position
+			beetle.state = beetle.State.GOING_TO_AREA
+
+func _on_SouthButton_pressed():
+	if selected_faction == SelectedFaction.ANT:
+		var ants = get_tree().get_nodes_in_group("Ant")
+		for ant in ants:
+			if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
+				ant.area_position = $AreaS.position
+				ant.state = ant.State.GOING_TO_AREA
+
+	if selected_faction == SelectedFaction.BEETLE:
+		var beetles = get_tree().get_nodes_in_group("Beetle")
+		for beetle in beetles:
+			beetle.area_position = $AreaS.position
+			beetle.state = beetle.State.GOING_TO_AREA
+
+func _on_EastButton_pressed():
+	if selected_faction == SelectedFaction.ANT:
+		var ants = get_tree().get_nodes_in_group("Ant")
+		for ant in ants:
+			if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
+				ant.area_position = $AreaE.position
+				ant.state = ant.State.GOING_TO_AREA
+
+	if selected_faction == SelectedFaction.BEETLE:
+		var beetles = get_tree().get_nodes_in_group("Beetle")
+		for beetle in beetles:
+			beetle.area_position = $AreaE.position
+			beetle.state = beetle.State.GOING_TO_AREA
+
+func _on_WestButton_pressed():
+	if selected_faction == SelectedFaction.ANT:
+		var ants = get_tree().get_nodes_in_group("Ant")
+		for ant in ants:
+			if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
+				ant.area_position = $AreaW.position
+				ant.state = ant.State.GOING_TO_AREA
+
+	if selected_faction == SelectedFaction.BEETLE:
+		var beetles = get_tree().get_nodes_in_group("Beetle")
+		for beetle in beetles:
+			beetle.area_position = $AreaW.position
+			beetle.state = beetle.State.GOING_TO_AREA
+
+func _on_AntsButton_pressed():
+	selected_faction = SelectedFaction.ANT
+
+func _on_BeetlesButton_pressed():
+	selected_faction = SelectedFaction.BEETLE
