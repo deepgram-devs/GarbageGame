@@ -77,7 +77,7 @@ func _process(_delta):
 				# if this ant isn't collecting waste or moving it to the mushroom,
 				# and this waste isn't being carried or collected,
 				# and this ant is close to this waste, set this ant to collect this waste
-				if ant.global_position.distance_to(waste.global_position) < 200.0:
+				if ant.global_position.distance_to(waste.global_position) < 100.0:
 					ant.waste = waste
 					ant.state = ant.State.COLLECTING_GARBAGE
 					waste.being_collected = true
@@ -88,7 +88,7 @@ func _on_NorthButton_pressed():
 		var ants = get_tree().get_nodes_in_group("Ant")
 		for ant in ants:
 			if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
-				ant.area_position = $AreaN.position
+				ant.area_position = $AreaN.position + Vector2(rng.randf_range(-50.0, 50.0), rng.randf_range(-10.0, 50.0))
 				ant.state = ant.State.GOING_TO_AREA
 
 	if selected_faction == SelectedFaction.BEETLE:
@@ -102,7 +102,7 @@ func _on_SouthButton_pressed():
 		var ants = get_tree().get_nodes_in_group("Ant")
 		for ant in ants:
 			if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
-				ant.area_position = $AreaS.position
+				ant.area_position = $AreaS.position + Vector2(rng.randf_range(-50.0, 50.0), rng.randf_range(-50.0, 10.0))
 				ant.state = ant.State.GOING_TO_AREA
 
 	if selected_faction == SelectedFaction.BEETLE:
@@ -116,7 +116,7 @@ func _on_EastButton_pressed():
 		var ants = get_tree().get_nodes_in_group("Ant")
 		for ant in ants:
 			if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
-				ant.area_position = $AreaE.position
+				ant.area_position = $AreaE.position + Vector2(rng.randf_range(-50.0, 10.0), rng.randf_range(-50.0, 50.0))
 				ant.state = ant.State.GOING_TO_AREA
 
 	if selected_faction == SelectedFaction.BEETLE:
@@ -130,7 +130,7 @@ func _on_WestButton_pressed():
 		var ants = get_tree().get_nodes_in_group("Ant")
 		for ant in ants:
 			if ant.state == ant.State.GOING_TO_AREA or ant.state == ant.State.IDLE:
-				ant.area_position = $AreaW.position
+				ant.area_position = $AreaW.position + Vector2(rng.randf_range(-10.0, 50.0), rng.randf_range(-50.0, 50.0))
 				ant.state = ant.State.GOING_TO_AREA
 
 	if selected_faction == SelectedFaction.BEETLE:
