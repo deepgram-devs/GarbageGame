@@ -144,3 +144,8 @@ func _on_AntsButton_pressed():
 
 func _on_BeetlesButton_pressed():
 	selected_faction = SelectedFaction.BEETLE
+
+func _on_FlowerTimer_timeout():
+	var flower = load("res://Scenes/Flower.tscn").instance()
+	add_child(flower)
+	flower.position = Vector2(rng.randf_range(112, 528), rng.randf_range(150, 330))

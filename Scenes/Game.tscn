@@ -446,6 +446,9 @@ texture_normal = ExtResource( 3 )
 [node name="Mushroom" parent="." instance=ExtResource( 9 )]
 position = Vector2( 320, 240 )
 
+[node name="FlowerTimer" type="Timer" parent="."]
+autostart = true
+
 [connection signal="timeout" from="AntSpawnTimer" to="." method="_on_AntSpawnTimer_timeout"]
 [connection signal="timeout" from="BeetleSpawnTimer" to="." method="_on_BeetleSpawnTimer_timeout"]
 [connection signal="timeout" from="WasteTimer" to="." method="_on_WasteTimer_timeout"]
@@ -455,3 +458,4 @@ position = Vector2( 320, 240 )
 [connection signal="pressed" from="CanvasLayer/MarginContainerWest/WestButton" to="." method="_on_WestButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerAnts/AntsButton" to="." method="_on_AntsButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerBeetles/BeetlesButton" to="." method="_on_BeetlesButton_pressed"]
+[connection signal="timeout" from="FlowerTimer" to="." method="_on_FlowerTimer_timeout"]
