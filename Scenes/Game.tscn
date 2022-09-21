@@ -1,7 +1,7 @@
 [gd_scene load_steps=25 format=2]
 
 [ext_resource path="res://Assets/turtileset.png" type="Texture" id=1]
-[ext_resource path="res://Scenes/Game.gd" type="Script" id=2]
+[ext_resource path="res://Scenes/Game.gdns" type="Script" id=2]
 [ext_resource path="res://Assets/UI/button_beetles.png" type="Texture" id=3]
 [ext_resource path="res://Assets/UI/button_west.png" type="Texture" id=4]
 [ext_resource path="res://Assets/UI/button_east.png" type="Texture" id=5]
@@ -519,7 +519,7 @@ texture = ExtResource( 11 )
 
 [connection signal="timeout" from="AntSpawnTimer" to="." method="_on_AntSpawnTimer_timeout"]
 [connection signal="timeout" from="BeetleSpawnTimer" to="." method="_on_BeetleSpawnTimer_timeout"]
-[connection signal="timeout" from="WasteTimer" to="." method="_on_WasteTimer_timeout"]
+[connection signal="timeout" from="WasteTimer" to="." method="on_waste_timer_timeout"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerNorth/NorthButton" to="." method="_on_NorthButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerSouth/SouthButton" to="." method="_on_SouthButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerEast/EastButton" to="." method="_on_EastButton_pressed"]
