@@ -517,7 +517,7 @@ texture = ExtResource( 11 )
 position = Vector2( 205, 347 )
 texture = ExtResource( 11 )
 
-[connection signal="timeout" from="AntSpawnTimer" to="." method="_on_AntSpawnTimer_timeout"]
+[connection signal="timeout" from="AntSpawnTimer" to="." method="on_ant_spawn_timer_timeout"]
 [connection signal="timeout" from="BeetleSpawnTimer" to="." method="_on_BeetleSpawnTimer_timeout"]
 [connection signal="timeout" from="WasteTimer" to="." method="on_waste_timer_timeout"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerNorth/NorthButton" to="." method="_on_NorthButton_pressed"]

@@ -9,7 +9,7 @@ pub struct Waste {
     being_carried: bool,
     /// Tells if an Ant is moving towards the Waste to collect it
     #[property]
-    being_collected: bool,
+    pub(crate) being_collected: bool,
 }
 
 impl Waste {
