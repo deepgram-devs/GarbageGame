@@ -27,6 +27,7 @@ pub struct Ant {
 
 impl Ant {
     fn new(_base: &KinematicBody2D) -> Self {
+        // Maybe fuzzy/random speed
         Ant { state: State::Idle }
     }
 
@@ -68,6 +69,7 @@ impl Ant {
                             unsafe { joint.assume_safe() }.queue_free();
                         }
                     }
+                    // Don't just stay at mushroom - go back somewhere
 
                     Vector2::ZERO
                 } else {
