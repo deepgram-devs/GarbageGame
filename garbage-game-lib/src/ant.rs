@@ -13,8 +13,9 @@ const SPEED: f32 = 100.0;
 // for these.
 const DEFAULT_MAX_SLIDES: i64 = 4;
 
-enum State {
+pub(crate) enum State {
     Idle,
+    GoingToArea(Vector2),
     CollectingWaste(Rc<RefCell<Instance<Waste>>>),
     GoingToMushroom(Rc<RefCell<Instance<Waste>>>),
 }
@@ -22,7 +23,7 @@ enum State {
 #[derive(NativeClass)]
 #[inherit(KinematicBody2D)]
 pub struct Ant {
-    state: State,
+    pub(crate) state: State,
 }
 
 impl Ant {
@@ -39,10 +40,6 @@ impl Ant {
         let waste = waste.claim();
         self.state = State::CollectingWaste(Rc::new(RefCell::new(waste)));
     }
-
-    pub(crate) fn is_idle(&self) -> bool {
-        matches!(self.state, State::Idle)
-    }
 }
 
 #[methods]
@@ -55,6 +52,16 @@ impl Ant {
                 let direction = waste.global_position() - base.global_position();
                 let direction = direction.normalized();
                 direction * SPEED
+            }
+            State::GoingToArea(destination) => {
+                if destination.distance_to(base.global_position()) < 10.0 {
+                    self.state = State::Idle;
+                    Vector2::ZERO
+                } else {
+                    let direction = *destination - base.global_position();
+                    let direction = direction.normalized();
+                    direction * SPEED
+                }
             }
             State::GoingToMushroom(waste) => {
                 // TODO store mushroom position somewhere

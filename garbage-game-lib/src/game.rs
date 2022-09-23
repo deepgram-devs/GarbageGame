@@ -1,7 +1,7 @@
-use gdnative::api::{RandomNumberGenerator, RigidBody2D};
+use gdnative::api::{Area2D, RandomNumberGenerator, RigidBody2D};
 use gdnative::prelude::*;
 
-use super::Ant;
+use super::ant::{Ant, State as AntState};
 use super::Waste;
 
 #[derive(NativeClass)]
@@ -34,11 +34,11 @@ impl Game {
                     .assume_safe()
             };
             let ant_instance = ant.cast_instance::<Ant>().unwrap();
-            let is_idle = ant_instance
-                .map(|ant, _| ant.is_idle())
+            let can_pickup_garbage = ant_instance
+                .map(|ant, _| matches!(ant.state, AntState::Idle | AntState::GoingToArea(_)))
                 .expect("Should always be able to ask if ant is idle");
 
-            if is_idle {
+            if can_pickup_garbage {
                 for waste in wastes.into_iter() {
                     let waste = unsafe {
                         waste
@@ -92,10 +92,49 @@ impl Game {
         let ant_node = new_ant_node
             .cast::<Node2D>()
             .expect("All ants are KinematicBody2D which are Node2D");
+
         let x_pos = self.rng.randf_range(300.0, 400.0);
         ant_node.set_position(Vector2::new(x_pos as f32, 300.0));
 
         base.add_child(new_ant, false);
+    }
+
+    #[method]
+    fn on_west_button_pressed(&self, #[base] base: &Node2D) {
+        let scene = base.get_tree().expect("Game tree should always be there");
+        let scene = unsafe { scene.assume_safe() };
+        let ants = scene.get_nodes_in_group("Ant");
+
+        for ant in ants.into_iter() {
+            let ant = unsafe {
+                ant.to_object::<KinematicBody2D>()
+                    .expect("Ant wasn't RigidBody2D")
+                    .assume_safe()
+            };
+            let ant_instance = ant.cast_instance::<Ant>().unwrap();
+            let should_go_to_area = ant_instance
+                .map(|ant, _| matches!(ant.state, AntState::GoingToArea(_) | AntState::Idle))
+                .expect("Should always be able to ask if ant is idle");
+            if should_go_to_area {
+                ant_instance
+                    .map_mut(|ant, _| {
+                        let west_area = unsafe {
+                            base.get_node("AreaW")
+                                .expect("West area should be there.")
+                                .assume_safe()
+                        };
+                        let west_area =
+                            west_area.cast::<Area2D>().expect("West area is an Area2D.");
+                        let destination = west_area.global_position()
+                            + Vector2::new(
+                                self.rng.randf_range(-10.0, 50.0) as f32,
+                                self.rng.randf_range(-50.0, 50.0) as f32,
+                            );
+                        ant.state = AntState::GoingToArea(destination)
+                    })
+                    .expect("Failed to send ant to area");
+            }
+        }
     }
 }
 

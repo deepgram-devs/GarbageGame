@@ -522,6 +522,6 @@ texture = ExtResource( 11 )
 [connection signal="pressed" from="CanvasLayer/MarginContainerNorth/NorthButton" to="." method="_on_NorthButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerSouth/SouthButton" to="." method="_on_SouthButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerEast/EastButton" to="." method="_on_EastButton_pressed"]
-[connection signal="pressed" from="CanvasLayer/MarginContainerWest/WestButton" to="." method="_on_WestButton_pressed"]
+[connection signal="pressed" from="CanvasLayer/MarginContainerWest/WestButton" to="." method="on_west_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerAnts/AntsButton" to="." method="_on_AntsButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerBeetles/BeetlesButton" to="." method="_on_BeetlesButton_pressed"]
