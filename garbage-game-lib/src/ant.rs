@@ -1,4 +1,4 @@
-use super::Waste;
+use super::waste::{State as WasteState, Waste};
 
 use gdnative::api::{KinematicBody2D, PinJoint2D};
 use gdnative::prelude::*;
@@ -34,7 +34,7 @@ impl Ant {
 
     pub(crate) fn collect_waste(&mut self, waste: TInstance<Waste>) {
         waste
-            .map_mut(|waste, _| waste.being_collected = true)
+            .map_mut(|waste, _| waste.state = WasteState::Sought)
             .expect("Failed to mark waste as being collected");
 
         let waste = waste.claim();
@@ -65,9 +65,10 @@ impl Ant {
             }
             State::GoingToMushroom(waste) => {
                 // TODO store mushroom position somewhere
-                let mushroom_position = Vector2::new(320.0, 240.0);
+                let mushroom_position = Vector2::new(320.0, 204.0);
                 let waste = unsafe { waste.borrow().base().assume_safe() };
 
+                // TODO: this is a kind of hacky way of asking "is the waste close to the mushroom"
                 if waste.global_position().distance_to(mushroom_position) < 50.0 {
                     waste.queue_free();
                     self.state = State::Idle;
@@ -98,7 +99,10 @@ impl Ant {
 
         // This doesn't look totally right :thinking:
         if returned_velocity != Vector2::ZERO {
-            base.set_rotation(returned_velocity.angle() as f64);
+            let inverted_returned_velocity =
+                Vector2::new(returned_velocity.x, -returned_velocity.y);
+
+            base.set_rotation(inverted_returned_velocity.angle() as f64);
         }
 
         let mut reached_waste = false;
@@ -125,7 +129,7 @@ impl Ant {
                 let waste_ref = unsafe { waste.borrow_mut().assume_safe() };
                 waste_ref
                     .map_mut(|waste, _| {
-                        waste.being_carried = true;
+                        waste.state = WasteState::Carried;
                     })
                     .expect("Faild to mark waste as being carried");
 

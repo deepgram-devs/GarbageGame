@@ -2,7 +2,7 @@ use gdnative::api::{Area2D, GlobalConstants, RandomNumberGenerator, RigidBody2D}
 use gdnative::prelude::*;
 
 use super::ant::{Ant, State as AntState};
-use super::Waste;
+use super::waste::{State as WasteState, Waste};
 
 #[derive(NativeClass)]
 #[inherit(Node2D)]
@@ -24,27 +24,33 @@ impl Game {
     fn _input(&self, #[base] base: &Node2D, event: Ref<InputEvent>) {
         let event = unsafe { event.assume_safe() };
         if let Some(key) = event.cast::<InputEventKey>() {
-            if key.is_pressed() && key.scancode() == GlobalConstants::KEY_W {
-                let west_button = unsafe {
-                    base.get_node("CanvasLayer/MarginContainerWest/WestButton")
-                        .expect("West button should be present.")
-                        .assume_safe()
+            if key.is_pressed() {
+                let area_button_path = if key.scancode() == GlobalConstants::KEY_N {
+                    Some("CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer2/ButtonN")
+                } else if key.scancode() == GlobalConstants::KEY_S {
+                    Some("CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer2/ButtonS")
+                } else if key.scancode() == GlobalConstants::KEY_E {
+                    Some("CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer3/ButtonE")
+                } else if key.scancode() == GlobalConstants::KEY_W {
+                    Some("CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer1/ButtonW")
+                } else {
+                    None
                 };
-                west_button.emit_signal("pressed", &[]);
+
+                if let Some(area_button_path) = area_button_path {
+                    let button = unsafe {
+                        base.get_node(area_button_path)
+                            .expect(&format!(
+                                "The following button node path couldn't be found: {:?}.",
+                                area_button_path
+                            ))
+                            .assume_safe()
+                    };
+                    button.emit_signal("pressed", &[]);
+                }
             }
         }
     }
-
-    // func _input(event):
-    // 	if event is InputEventKey and event.pressed:
-    // 		if event.scancode == KEY_N:
-    // 			$CanvasLayer/MarginContainerNorth/NorthButton.emit_signal("pressed")
-    // 		if event.scancode == KEY_S:
-    // 			$CanvasLayer/MarginContainerSouth/SouthButton.emit_signal("pressed")
-    // 		if event.scancode == KEY_E:
-    // 			$CanvasLayer/MarginContainerEast/EastButton.emit_signal("pressed")
-    // 		if event.scancode == KEY_W:
-    // 			$CanvasLayer/MarginContainerWest/WestButton.emit_signal("pressed")
 
     #[method]
     fn _process(&self, #[base] base: &Node2D, _delta: f32) {
@@ -73,10 +79,10 @@ impl Game {
                             .assume_safe()
                     };
                     let waste_instance = waste.cast_instance::<Waste>().unwrap();
-                    let being_collected = waste_instance
-                        .map(|waste, _| waste.being_collected)
+                    let waste_grounded = waste_instance
+                        .map(|waste, _| matches!(waste.state, WasteState::Grounded))
                         .expect("Waste is missing collected property");
-                    if !being_collected
+                    if waste_grounded
                         && ant.global_position().distance_to(waste.global_position()) < 100.0
                     {
                         ant_instance
@@ -92,6 +98,14 @@ impl Game {
 
     #[method]
     fn on_waste_timer_timeout(&self, #[base] base: &Node2D) {
+        let scene = base.get_tree().expect("Game tree should always be there");
+        let scene = unsafe { scene.assume_safe() };
+        let wastes = scene.get_nodes_in_group("Waste");
+
+        if wastes.len() >= 20 {
+            return;
+        }
+
         let packed_scene = load_scene("res://Scenes/Waste.tscn").expect("Waste scene should exist");
         let new_waste = packed_scene
             .instance(0)
@@ -109,6 +123,14 @@ impl Game {
 
     #[method]
     fn on_ant_spawn_timer_timeout(&self, #[base] base: &Node2D) {
+        let scene = base.get_tree().expect("Game tree should always be there");
+        let scene = unsafe { scene.assume_safe() };
+        let ants = scene.get_nodes_in_group("Ant");
+
+        if ants.len() >= 5 {
+            return;
+        }
+
         let packed_scene = load_scene("res://Scenes/Ant.tscn").expect("Ant scene should exist");
         let new_ant = packed_scene
             .instance(0)
@@ -126,7 +148,26 @@ impl Game {
     }
 
     #[method]
+    fn on_north_button_pressed(&self, #[base] base: &Node2D) {
+        self.handle_move_to_area_command(base, "AreaN")
+    }
+
+    #[method]
+    fn on_south_button_pressed(&self, #[base] base: &Node2D) {
+        self.handle_move_to_area_command(base, "AreaS")
+    }
+
+    #[method]
+    fn on_east_button_pressed(&self, #[base] base: &Node2D) {
+        self.handle_move_to_area_command(base, "AreaE")
+    }
+
+    #[method]
     fn on_west_button_pressed(&self, #[base] base: &Node2D) {
+        self.handle_move_to_area_command(base, "AreaW")
+    }
+
+    fn handle_move_to_area_command(&self, base: &Node2D, area_path: &str) {
         let scene = base.get_tree().expect("Game tree should always be there");
         let scene = unsafe { scene.assume_safe() };
         let ants = scene.get_nodes_in_group("Ant");
@@ -144,17 +185,21 @@ impl Game {
             if should_go_to_area {
                 ant_instance
                     .map_mut(|ant, _| {
-                        let west_area = unsafe {
-                            base.get_node("AreaW")
-                                .expect("West area should be there.")
+                        let area = unsafe {
+                            base.get_node(area_path)
+                                .expect(&format!(
+                                    "Could not get the Area with path: {:?}",
+                                    area_path
+                                ))
                                 .assume_safe()
                         };
-                        let west_area =
-                            west_area.cast::<Area2D>().expect("West area is an Area2D.");
-                        let destination = west_area.global_position()
+                        let area = area
+                            .cast::<Area2D>()
+                            .expect("Unable to get Are2D in handle_move_to_area_command.");
+                        let destination = area.global_position()
                             + Vector2::new(
-                                self.rng.randf_range(-10.0, 50.0) as f32,
-                                self.rng.randf_range(-50.0, 50.0) as f32,
+                                self.rng.randf_range(-32.0, 32.0) as f32,
+                                self.rng.randf_range(-32.0, 32.0) as f32,
                             );
                         ant.state = AntState::GoingToArea(destination)
                     })

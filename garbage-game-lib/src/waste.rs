@@ -1,18 +1,17 @@
 use gdnative::api::{RandomNumberGenerator, RigidBody2D};
 use gdnative::prelude::*;
 
+pub(crate) enum State {
+    Falling(f32),
+    Grounded,
+    Sought,
+    Carried,
+}
+
 #[derive(NativeClass)]
 #[inherit(RigidBody2D)]
 pub struct Waste {
-    /// Whether this is being carried by an Ant or not.
-    #[property]
-    pub(crate) being_carried: bool,
-    /// Tells if an Ant is moving towards the Waste to collect it
-    #[property]
-    pub(crate) being_collected: bool,
-
-    /// Where this waste will stop falling
-    finish_position_y: f32,
+    pub(crate) state: State,
 }
 
 impl Waste {
@@ -20,11 +19,8 @@ impl Waste {
         let rng = RandomNumberGenerator::new();
         rng.randomize();
 
-        let random_finish_position = rng.randf_range(150.0, 330.0);
         Waste {
-            being_carried: false,
-            being_collected: false,
-            finish_position_y: random_finish_position as f32,
+            state: State::Falling(rng.randf_range(50.0, 335.0) as f32),
         }
     }
 }
@@ -32,10 +28,19 @@ impl Waste {
 #[methods]
 impl Waste {
     #[method]
-    fn _physics_process(&self, #[base] base: &RigidBody2D, _delta: f32) {
-        if base.position().y > self.finish_position_y {
-            base.set_gravity_scale(0.0);
-            base.set_linear_damp(10.0);
+    fn _physics_process(&mut self, #[base] base: &RigidBody2D, _delta: f32) {
+        if let State::Falling(distance) = self.state {
+            if base.position().y > distance {
+                base.set_gravity_scale(0.0);
+                base.set_linear_damp(10.0);
+                base.set_collision_mask_bit(0, true); // tilemap
+                base.set_collision_mask_bit(1, true); // ants
+                base.set_collision_mask_bit(2, true); // waste on the ground
+
+                base.set_collision_layer_bit(2, true); // waste on the ground
+
+                self.state = State::Grounded;
+            }
         }
     }
 }
