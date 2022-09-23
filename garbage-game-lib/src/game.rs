@@ -1,4 +1,4 @@
-use gdnative::api::{Area2D, RandomNumberGenerator, RigidBody2D};
+use gdnative::api::{Area2D, GlobalConstants, RandomNumberGenerator, RigidBody2D};
 use gdnative::prelude::*;
 
 use super::ant::{Ant, State as AntState};
@@ -20,6 +20,30 @@ impl Game {
 
 #[methods]
 impl Game {
+    #[method]
+    fn _input(&self, #[base] base: &Node2D, event: Ref<InputEventKey>) {
+        let event = unsafe { event.assume_safe() };
+        if event.is_pressed() && event.scancode() == GlobalConstants::KEY_W {
+            let west_button = unsafe {
+                base.get_node("CanvasLayer/MarginContainerWest/WestButton")
+                    .expect("West button should be present.")
+                    .assume_safe()
+            };
+            west_button.emit_signal("pressed", &[]);
+        }
+    }
+
+    // func _input(event):
+    // 	if event is InputEventKey and event.pressed:
+    // 		if event.scancode == KEY_N:
+    // 			$CanvasLayer/MarginContainerNorth/NorthButton.emit_signal("pressed")
+    // 		if event.scancode == KEY_S:
+    // 			$CanvasLayer/MarginContainerSouth/SouthButton.emit_signal("pressed")
+    // 		if event.scancode == KEY_E:
+    // 			$CanvasLayer/MarginContainerEast/EastButton.emit_signal("pressed")
+    // 		if event.scancode == KEY_W:
+    // 			$CanvasLayer/MarginContainerWest/WestButton.emit_signal("pressed")
+
     #[method]
     fn _process(&self, #[base] base: &Node2D, _delta: f32) {
         let scene = base.get_tree().expect("Game tree should always be there");
