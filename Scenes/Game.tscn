@@ -518,7 +518,6 @@ position = Vector2( 205, 347 )
 texture = ExtResource( 11 )
 
 [connection signal="timeout" from="AntSpawnTimer" to="." method="on_ant_spawn_timer_timeout"]
-[connection signal="timeout" from="BeetleSpawnTimer" to="." method="_on_BeetleSpawnTimer_timeout"]
 [connection signal="timeout" from="WasteTimer" to="." method="on_waste_timer_timeout"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerNorth/NorthButton" to="." method="_on_NorthButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerSouth/SouthButton" to="." method="_on_SouthButton_pressed"]
@@ -526,4 +525,3 @@ texture = ExtResource( 11 )
 [connection signal="pressed" from="CanvasLayer/MarginContainerWest/WestButton" to="." method="_on_WestButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerAnts/AntsButton" to="." method="_on_AntsButton_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainerBeetles/BeetlesButton" to="." method="_on_BeetlesButton_pressed"]
-[connection signal="timeout" from="FlowerTimer" to="." method="_on_FlowerTimer_timeout"]

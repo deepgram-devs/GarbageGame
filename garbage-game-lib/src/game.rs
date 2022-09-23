@@ -34,11 +34,11 @@ impl Game {
                     .assume_safe()
             };
             let ant_instance = ant.cast_instance::<Ant>().unwrap();
-            let collecting_waste = ant_instance
-                .map(|ant, _| ant.collecting_waste())
-                .expect("Should always be able to ask if ant is collecting waste");
+            let is_idle = ant_instance
+                .map(|ant, _| ant.is_idle())
+                .expect("Should always be able to ask if ant is idle");
 
-            if !collecting_waste {
+            if is_idle {
                 for waste in wastes.into_iter() {
                     let waste = unsafe {
                         waste

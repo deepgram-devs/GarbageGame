@@ -1,7 +1,10 @@
 use super::Waste;
 
-use gdnative::api::KinematicBody2D;
+use gdnative::api::{KinematicBody2D, PinJoint2D};
 use gdnative::prelude::*;
+
+use std::cell::RefCell;
+use std::rc::Rc;
 
 const SPEED: f32 = 100.0;
 
@@ -12,7 +15,8 @@ const DEFAULT_MAX_SLIDES: i64 = 4;
 
 enum State {
     Idle,
-    CollectingWaste(Instance<Waste>),
+    CollectingWaste(Rc<RefCell<Instance<Waste>>>),
+    GoingToMushroom(Rc<RefCell<Instance<Waste>>>),
 }
 
 #[derive(NativeClass)]
@@ -32,28 +36,47 @@ impl Ant {
             .expect("Failed to mark waste as being collected");
 
         let waste = waste.claim();
-        self.state = State::CollectingWaste(waste);
-
-        godot_print!("Collecting some waste!");
+        self.state = State::CollectingWaste(Rc::new(RefCell::new(waste)));
     }
 
-    pub(crate) fn collecting_waste(&self) -> bool {
-        matches!(self.state, State::CollectingWaste(_))
+    pub(crate) fn is_idle(&self) -> bool {
+        matches!(self.state, State::Idle)
     }
 }
 
 #[methods]
 impl Ant {
     #[method]
-    fn _physics_process(&self, #[base] base: &KinematicBody2D, _delta: f32) {
-        let velocity = match &self.state {
+    fn _physics_process(&mut self, #[base] base: &KinematicBody2D, _delta: f32) {
+        let velocity = match &mut self.state {
             State::CollectingWaste(waste) => {
-                let waste = unsafe { waste.base().assume_safe() };
+                let waste = unsafe { waste.borrow().base().assume_safe() };
                 let direction = waste.global_position() - base.global_position();
                 let direction = direction.normalized();
                 direction * SPEED
             }
-            _ => Vector2::ZERO,
+            State::GoingToMushroom(waste) => {
+                // TODO store mushroom position somewhere
+                let mushroom_position = Vector2::new(320.0, 240.0);
+                let waste = unsafe { waste.borrow().base().assume_safe() };
+
+                if waste.global_position().distance_to(mushroom_position) < 50.0 {
+                    waste.queue_free();
+                    self.state = State::Idle;
+                    for child in base.get_children().into_iter() {
+                        if let Some(joint) = child.to_object::<PinJoint2D>() {
+                            unsafe { joint.assume_safe() }.queue_free();
+                        }
+                    }
+
+                    Vector2::ZERO
+                } else {
+                    let direction = mushroom_position - base.global_position();
+                    let direction = direction.normalized();
+                    direction * SPEED
+                }
+            }
+            State::Idle => Vector2::ZERO,
         };
         let returned_velocity = base.move_and_slide(
             velocity,
@@ -67,6 +90,46 @@ impl Ant {
         // This doesn't look totally right :thinking:
         if returned_velocity != Vector2::ZERO {
             base.set_rotation(returned_velocity.angle() as f64);
+        }
+
+        let mut reached_waste = false;
+
+        // TODO `any()`
+        if let State::CollectingWaste(waste) = &mut self.state {
+            for collision_idx in 0..base.get_slide_count() {
+                if let Some(collision) = base.get_slide_collision(collision_idx) {
+                    let collision = unsafe { collision.assume_safe() };
+                    if let Some(collider) = collision.collider() {
+                        let collider = unsafe { collider.assume_safe() };
+                        let waste_id =
+                            unsafe { waste.borrow().base().assume_safe().get_instance_id() };
+                        if collider.get_instance_id() == waste_id {
+                            reached_waste = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if reached_waste {
+            if let State::CollectingWaste(waste) = &mut self.state {
+                let waste_ref = unsafe { waste.borrow_mut().assume_safe() };
+                waste_ref
+                    .map_mut(|waste, _| {
+                        waste.being_carried = true;
+                    })
+                    .expect("Faild to mark waste as being carried");
+
+                let joint = PinJoint2D::new();
+                joint.add_to_group("PinJoint2D", false);
+                joint.set_node_a(base.get_path());
+                joint.set_node_b(waste_ref.base().get_path());
+
+                // TODO maybe store joint in state?
+                base.add_child(joint, false);
+
+                self.state = State::GoingToMushroom(Rc::clone(waste));
+            }
         }
     }
 }
