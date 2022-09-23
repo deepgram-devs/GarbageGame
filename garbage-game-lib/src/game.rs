@@ -12,24 +12,26 @@ pub struct Game {
 
 impl Game {
     fn new(_base: &Node2D) -> Self {
-        Game {
-            rng: RandomNumberGenerator::new(),
-        }
+        let rng = RandomNumberGenerator::new();
+        rng.randomize();
+        Game { rng }
     }
 }
 
 #[methods]
 impl Game {
     #[method]
-    fn _input(&self, #[base] base: &Node2D, event: Ref<InputEventKey>) {
+    fn _input(&self, #[base] base: &Node2D, event: Ref<InputEvent>) {
         let event = unsafe { event.assume_safe() };
-        if event.is_pressed() && event.scancode() == GlobalConstants::KEY_W {
-            let west_button = unsafe {
-                base.get_node("CanvasLayer/MarginContainerWest/WestButton")
-                    .expect("West button should be present.")
-                    .assume_safe()
-            };
-            west_button.emit_signal("pressed", &[]);
+        if let Some(key) = event.cast::<InputEventKey>() {
+            if key.is_pressed() && key.scancode() == GlobalConstants::KEY_W {
+                let west_button = unsafe {
+                    base.get_node("CanvasLayer/MarginContainerWest/WestButton")
+                        .expect("West button should be present.")
+                        .assume_safe()
+                };
+                west_button.emit_signal("pressed", &[]);
+            }
         }
     }
 
@@ -100,7 +102,7 @@ impl Game {
             .cast::<Node2D>()
             .expect("All wastes are RigidBody2D which are Node2D");
         let x_pos = self.rng.randf_range(100.0, 500.0);
-        waste_node.set_position(Vector2::new(x_pos as f32, 100.0));
+        waste_node.set_position(Vector2::new(x_pos as f32, -100.0));
 
         base.add_child(new_waste, false);
     }
