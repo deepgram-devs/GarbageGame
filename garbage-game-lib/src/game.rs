@@ -1,4 +1,4 @@
-use gdnative::api::{Area2D, GlobalConstants, RandomNumberGenerator, RigidBody2D};
+use gdnative::api::{Area2D, GlobalConstants, RandomNumberGenerator, RigidBody2D, YSort};
 use gdnative::prelude::*;
 
 use super::ant::{Ant, State as AntState};
@@ -114,7 +114,7 @@ impl Game {
 
         let waste_node = new_waste_node
             .cast::<Node2D>()
-            .expect("All wastes are RigidBody2D which are Node2D");
+            .expect("All wastes are RigidBody2D which are Node2D.");
         let x_pos = self.rng.randf_range(100.0, 500.0);
         waste_node.set_position(Vector2::new(x_pos as f32, -100.0));
 
@@ -123,7 +123,7 @@ impl Game {
 
     #[method]
     fn on_ant_spawn_timer_timeout(&self, #[base] base: &Node2D) {
-        let scene = base.get_tree().expect("Game tree should always be there");
+        let scene = base.get_tree().expect("Game tree should always be there.");
         let scene = unsafe { scene.assume_safe() };
         let ants = scene.get_nodes_in_group("Ant");
 
@@ -131,7 +131,7 @@ impl Game {
             return;
         }
 
-        let packed_scene = load_scene("res://Scenes/Ant.tscn").expect("Ant scene should exist");
+        let packed_scene = load_scene("res://Scenes/Ant.tscn").expect("Ant scene should exist.");
         let new_ant = packed_scene
             .instance(0)
             .expect("Failed to instantiate Ant scene");
@@ -139,12 +139,37 @@ impl Game {
 
         let ant_node = new_ant_node
             .cast::<Node2D>()
-            .expect("All ants are KinematicBody2D which are Node2D");
+            .expect("All ants are KinematicBody2D which are Node2D.");
 
         let x_pos = self.rng.randf_range(300.0, 400.0);
         ant_node.set_position(Vector2::new(x_pos as f32, 300.0));
 
         base.add_child(new_ant, false);
+    }
+
+    #[method]
+    fn on_flower_timer_timeout(&self, #[base] base: &Node2D) {
+        let flower_y_sort = unsafe {
+            base.get_node_as::<YSort>("FlowerYSort")
+                .expect("Game should have FlowerYSort.")
+        };
+
+        let packed_scene =
+            load_scene("res://Scenes/Flower.tscn").expect("Flower scene should exist.");
+        let new_flower = packed_scene
+            .instance(0)
+            .expect("Failed to instantiate Flower scene");
+        let new_flower_node = unsafe { new_flower.assume_safe() };
+
+        let flower_node = new_flower_node
+            .cast::<Node2D>()
+            .expect("All flowers are Area2D which are Node2D.");
+        // we want flowers to spawn randomly over the same area where wastes can fall
+        let x_pos = self.rng.randf_range(100.0, 500.0);
+        let y_pos = self.rng.randf_range(50.0, 335.0);
+        flower_node.set_position(Vector2::new(x_pos as f32, y_pos as f32));
+
+        flower_y_sort.add_child(flower_node, false);
     }
 
     #[method]

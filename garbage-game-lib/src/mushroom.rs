@@ -17,7 +17,9 @@ impl Mushroom {
     #[method]
     fn on_area_2d_body_entered(&self, body: Ref<PhysicsBody2D>) {
         let body = unsafe { body.assume_safe() };
-        if body.is_in_group("Waste") {
+        if body.is_in_group("Flower") {
+            body.queue_free();
+        } else if body.is_in_group("Waste") {
             let waste = body
                 .cast::<RigidBody2D>()
                 .expect("Waste wasn't RigidBody2D");
@@ -25,8 +27,20 @@ impl Mushroom {
             let waste_instance = waste.cast_instance::<Waste>().unwrap();
 
             let waste_falling = waste_instance
-                .map(|waste, _| {
-                    matches!(waste.state, WasteState::Grounded | WasteState::Falling(_))
+                .map(|waste, _| match waste.state {
+                    WasteState::Grounded => true,
+                    WasteState::Falling(distance) => {
+                        // what we are saying here is that if the waste is set to fall below 250.0
+                        // (i.e. well enough below the mushroom itself), then don't destroy it here,
+                        // let it fall down through to the lower portion of the map - this way it
+                        // will even out the distribution of areas around the map where the waste can fall
+                        if distance < 250.0 {
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                    _ => false,
                 })
                 .expect("Waste is missing collected property");
 

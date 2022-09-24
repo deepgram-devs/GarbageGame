@@ -355,6 +355,9 @@ autostart = true
 [node name="WasteTimer" type="Timer" parent="."]
 autostart = true
 
+[node name="FlowerTimer" type="Timer" parent="."]
+autostart = true
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2( 320, 240 )
 current = true
@@ -486,8 +489,11 @@ texture = ExtResource( 11 )
 
 [node name="DeepgramInstance" parent="." instance=ExtResource( 3 )]
 
+[node name="FlowerYSort" type="YSort" parent="."]
+
 [connection signal="timeout" from="AntSpawnTimer" to="." method="on_ant_spawn_timer_timeout"]
 [connection signal="timeout" from="WasteTimer" to="." method="on_waste_timer_timeout"]
+[connection signal="timeout" from="FlowerTimer" to="." method="on_flower_timer_timeout"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer1/ButtonW" to="." method="on_west_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer2/ButtonN" to="." method="on_north_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer2/ButtonS" to="." method="on_south_button_pressed"]
