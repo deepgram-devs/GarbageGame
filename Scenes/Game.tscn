@@ -1,7 +1,8 @@
-[gd_scene load_steps=23 format=2]
+[gd_scene load_steps=24 format=2]
 
 [ext_resource path="res://Assets/turtileset.png" type="Texture" id=1]
 [ext_resource path="res://Scenes/Game.gdns" type="Script" id=2]
+[ext_resource path="res://Scenes/DeepgramIntegration/DeepgramInstance.tscn" type="PackedScene" id=3]
 [ext_resource path="res://Assets/UI/button_west.png" type="Texture" id=4]
 [ext_resource path="res://Assets/UI/button_east.png" type="Texture" id=5]
 [ext_resource path="res://Assets/UI/button_south.png" type="Texture" id=6]
@@ -483,9 +484,12 @@ texture = ExtResource( 11 )
 position = Vector2( 205, 347 )
 texture = ExtResource( 11 )
 
+[node name="DeepgramInstance" parent="." instance=ExtResource( 3 )]
+
 [connection signal="timeout" from="AntSpawnTimer" to="." method="on_ant_spawn_timer_timeout"]
 [connection signal="timeout" from="WasteTimer" to="." method="on_waste_timer_timeout"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer1/ButtonW" to="." method="on_west_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer2/ButtonN" to="." method="on_north_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer2/ButtonS" to="." method="on_south_button_pressed"]
 [connection signal="pressed" from="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer3/ButtonE" to="." method="on_east_button_pressed"]
+[connection signal="message_received" from="DeepgramInstance" to="." method="on_deepgram_instance_message_received"]

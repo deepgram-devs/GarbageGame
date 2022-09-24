@@ -148,6 +148,35 @@ impl Game {
     }
 
     #[method]
+    fn on_deepgram_instance_message_received(&self, #[base] base: &Node2D, message: String) {
+        godot_print!("In game.rs and received Deepgram message: {:?}", message);
+
+        let area_button_path = if message.contains("north") {
+            Some("CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer2/ButtonN")
+        } else if message.contains("south") {
+            Some("CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer2/ButtonS")
+        } else if message.contains("east") {
+            Some("CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer3/ButtonE")
+        } else if message.contains("west") {
+            Some("CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer1/ButtonW")
+        } else {
+            None
+        };
+
+        if let Some(area_button_path) = area_button_path {
+            let button = unsafe {
+                base.get_node(area_button_path)
+                    .expect(&format!(
+                        "The following button node path couldn't be found: {:?}.",
+                        area_button_path
+                    ))
+                    .assume_safe()
+            };
+            button.emit_signal("pressed", &[]);
+        }
+    }
+
+    #[method]
     fn on_north_button_pressed(&self, #[base] base: &Node2D) {
         self.handle_move_to_area_command(base, "AreaN")
     }
