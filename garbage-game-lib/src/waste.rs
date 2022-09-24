@@ -20,7 +20,7 @@ impl Waste {
         rng.randomize();
 
         Waste {
-            state: State::Falling(rng.randf_range(50.0, 335.0) as f32),
+            state: State::Falling(rng.randf_range(55.0, 340.0) as f32),
         }
     }
 }

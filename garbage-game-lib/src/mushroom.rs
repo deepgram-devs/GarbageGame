@@ -26,7 +26,7 @@ impl Mushroom {
 
             let waste_instance = waste.cast_instance::<Waste>().unwrap();
 
-            let waste_falling = waste_instance
+            let waste_can_be_destroyed = waste_instance
                 .map(|waste, _| match waste.state {
                     WasteState::Grounded => true,
                     WasteState::Falling(distance) => {
@@ -42,9 +42,9 @@ impl Mushroom {
                     }
                     _ => false,
                 })
-                .expect("Waste is missing collected property");
+                .expect("Could not check the state of Waste.");
 
-            if waste_falling {
+            if waste_can_be_destroyed {
                 waste.queue_free()
             }
         }

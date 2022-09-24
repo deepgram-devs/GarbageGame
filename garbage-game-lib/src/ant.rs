@@ -16,7 +16,7 @@ const DEFAULT_MAX_SLIDES: i64 = 4;
 pub(crate) enum State {
     Idle,
     GoingToArea(Vector2),
-    CollectingWaste(Rc<RefCell<Instance<Waste>>>),
+    SeekingWaste(Rc<RefCell<Instance<Waste>>>),
     GoingToMushroom(Rc<RefCell<Instance<Waste>>>),
 }
 
@@ -24,21 +24,25 @@ pub(crate) enum State {
 #[inherit(KinematicBody2D)]
 pub struct Ant {
     pub(crate) state: State,
+    last_going_to_area_state: Option<State>,
 }
 
 impl Ant {
     fn new(_base: &KinematicBody2D) -> Self {
         // Maybe fuzzy/random speed
-        Ant { state: State::Idle }
+        Ant {
+            state: State::Idle,
+            last_going_to_area_state: None,
+        }
     }
 
-    pub(crate) fn collect_waste(&mut self, waste: TInstance<Waste>) {
+    pub(crate) fn seek_waste(&mut self, waste: TInstance<Waste>) {
         waste
             .map_mut(|waste, _| waste.state = WasteState::Sought)
-            .expect("Failed to mark waste as being collected");
+            .expect("Failed to mark waste as sought.");
 
         let waste = waste.claim();
-        self.state = State::CollectingWaste(Rc::new(RefCell::new(waste)));
+        self.state = State::SeekingWaste(Rc::new(RefCell::new(waste)));
     }
 }
 
@@ -47,13 +51,16 @@ impl Ant {
     #[method]
     fn _physics_process(&mut self, #[base] base: &KinematicBody2D, _delta: f32) {
         let velocity = match &mut self.state {
-            State::CollectingWaste(waste) => {
+            State::SeekingWaste(waste) => {
                 let waste = unsafe { waste.borrow().base().assume_safe() };
                 let direction = waste.global_position() - base.global_position();
                 let direction = direction.normalized();
                 direction * SPEED
             }
             State::GoingToArea(destination) => {
+                // this is not the most logical place to put this, but it works
+                self.last_going_to_area_state = Some(State::GoingToArea(destination.clone()));
+
                 if destination.distance_to(base.global_position()) < 10.0 {
                     self.state = State::Idle;
                     Vector2::ZERO
@@ -64,20 +71,29 @@ impl Ant {
                 }
             }
             State::GoingToMushroom(waste) => {
-                // TODO store mushroom position somewhere
+                // TODO store mushroom position somewhere (globally? or get it from the Mushroom object itself)
                 let mushroom_position = Vector2::new(320.0, 204.0);
                 let waste = unsafe { waste.borrow().base().assume_safe() };
 
                 // TODO: this is a kind of hacky way of asking "is the waste close to the mushroom"
                 if waste.global_position().distance_to(mushroom_position) < 50.0 {
                     waste.queue_free();
-                    self.state = State::Idle;
                     for child in base.get_children().into_iter() {
                         if let Some(joint) = child.to_object::<PinJoint2D>() {
                             unsafe { joint.assume_safe() }.queue_free();
                         }
                     }
-                    // Don't just stay at mushroom - go back somewhere
+
+                    // Don't just stay at mushroom - go back to the last area this ant was commanded to go
+                    // if the ant hasn't been commanded to go anywhere in the past, make it idle
+                    if let Some(last_going_to_area_state) = &self.last_going_to_area_state {
+                        // this looks funny, but I did want to store the previous _state_, not just the previous _destination_
+                        if let State::GoingToArea(destination) = last_going_to_area_state {
+                            self.state = State::GoingToArea(destination.clone());
+                        }
+                    } else {
+                        self.state = State::Idle;
+                    }
 
                     Vector2::ZERO
                 } else {
@@ -108,7 +124,7 @@ impl Ant {
         let mut reached_waste = false;
 
         // TODO `any()`
-        if let State::CollectingWaste(waste) = &mut self.state {
+        if let State::SeekingWaste(waste) = &mut self.state {
             for collision_idx in 0..base.get_slide_count() {
                 if let Some(collision) = base.get_slide_collision(collision_idx) {
                     let collision = unsafe { collision.assume_safe() };
@@ -125,7 +141,7 @@ impl Ant {
         }
 
         if reached_waste {
-            if let State::CollectingWaste(waste) = &mut self.state {
+            if let State::SeekingWaste(waste) = &mut self.state {
                 let waste_ref = unsafe { waste.borrow_mut().assume_safe() };
                 waste_ref
                     .map_mut(|waste, _| {

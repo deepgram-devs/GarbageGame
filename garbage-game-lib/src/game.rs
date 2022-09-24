@@ -8,18 +8,33 @@ use super::waste::{State as WasteState, Waste};
 #[inherit(Node2D)]
 pub struct Game {
     rng: Ref<RandomNumberGenerator, Unique>,
+    waste_num_max: i32,
+    ant_num_max: i32,
 }
 
 impl Game {
     fn new(_base: &Node2D) -> Self {
         let rng = RandomNumberGenerator::new();
         rng.randomize();
-        Game { rng }
+        // TODO: consider moving waste_num_max, ant_num_max, and other hardcoded numbers into some globals file
+        Game {
+            rng,
+            waste_num_max: 40,
+            ant_num_max: 8,
+        }
     }
 }
 
 #[methods]
 impl Game {
+    // making the following take `&mut self` resulted in the error:
+    /*
+    ```
+     <unset>: gdnative-core: method call failed with error: borrow failed; a &mut reference was requested, but one already exists. The cause is likely a re-entrant call \
+     (e.g. a GDNative Rust method calls to GDScript, which again calls a Rust method on the same object)
+    ```
+     */
+    // so I will not be taking `&mut self` which means I cannot alter the max waste or max ants ...
     #[method]
     fn _input(&self, #[base] base: &Node2D, event: Ref<InputEvent>) {
         let event = unsafe { event.assume_safe() };
@@ -48,13 +63,33 @@ impl Game {
                     };
                     button.emit_signal("pressed", &[]);
                 }
+
+                if key.scancode() == GlobalConstants::KEY_F {
+                    let flower_timer = unsafe {
+                        base.get_node_as::<Timer>("FlowerTimer")
+                            .expect("Game should have an FlowerTimer.")
+                    };
+                    flower_timer.set_wait_time(0.2);
+
+                    let waste_timer = unsafe {
+                        base.get_node_as::<Timer>("WasteTimer")
+                            .expect("Game should have an WasteTimer.")
+                    };
+                    waste_timer.set_wait_time(0.2);
+
+                    let ant_timer = unsafe {
+                        base.get_node_as::<Timer>("AntTimer")
+                            .expect("Game should have an AntTimer.")
+                    };
+                    ant_timer.set_wait_time(0.2);
+                }
             }
         }
     }
 
     #[method]
     fn _process(&self, #[base] base: &Node2D, _delta: f32) {
-        let scene = base.get_tree().expect("Game tree should always be there");
+        let scene = base.get_tree().expect("Game tree should always be there.");
         let scene = unsafe { scene.assume_safe() };
         let ants = scene.get_nodes_in_group("Ant");
         let wastes = scene.get_nodes_in_group("Waste");
@@ -62,34 +97,34 @@ impl Game {
         for ant in ants.into_iter() {
             let ant = unsafe {
                 ant.to_object::<KinematicBody2D>()
-                    .expect("Ant wasn't RigidBody2D")
+                    .expect("Ant wasn't RigidBody2D.")
                     .assume_safe()
             };
             let ant_instance = ant.cast_instance::<Ant>().unwrap();
-            let can_pickup_garbage = ant_instance
+            let can_pickup_waste = ant_instance
                 .map(|ant, _| matches!(ant.state, AntState::Idle | AntState::GoingToArea(_)))
-                .expect("Should always be able to ask if ant is idle");
+                .expect("Should always be able to ask for the ant's state.");
 
-            if can_pickup_garbage {
+            if can_pickup_waste {
                 for waste in wastes.into_iter() {
                     let waste = unsafe {
                         waste
                             .to_object::<RigidBody2D>()
-                            .expect("Waste wasn't RigidBody2D")
+                            .expect("Waste wasn't RigidBody2D.")
                             .assume_safe()
                     };
                     let waste_instance = waste.cast_instance::<Waste>().unwrap();
                     let waste_grounded = waste_instance
                         .map(|waste, _| matches!(waste.state, WasteState::Grounded))
-                        .expect("Waste is missing collected property");
+                        .expect("Could not check if waste was grounded.");
                     if waste_grounded
                         && ant.global_position().distance_to(waste.global_position()) < 100.0
                     {
                         ant_instance
                             .map_mut(|ant, _| {
-                                ant.collect_waste(waste_instance);
+                                ant.seek_waste(waste_instance);
                             })
-                            .expect("Couldn't mutate the ant or something");
+                            .expect("Couldn't mutate the ant or something.");
                     }
                 }
             }
@@ -102,7 +137,7 @@ impl Game {
         let scene = unsafe { scene.assume_safe() };
         let wastes = scene.get_nodes_in_group("Waste");
 
-        if wastes.len() >= 20 {
+        if wastes.len() >= self.waste_num_max {
             return;
         }
 
@@ -127,7 +162,7 @@ impl Game {
         let scene = unsafe { scene.assume_safe() };
         let ants = scene.get_nodes_in_group("Ant");
 
-        if ants.len() >= 5 {
+        if ants.len() >= self.ant_num_max {
             return;
         }
 
@@ -165,8 +200,9 @@ impl Game {
             .cast::<Node2D>()
             .expect("All flowers are Area2D which are Node2D.");
         // we want flowers to spawn randomly over the same area where wastes can fall
+        // flowers which spawn on the mushroom will die, the mushroom collision handling will deal with that
         let x_pos = self.rng.randf_range(100.0, 500.0);
-        let y_pos = self.rng.randf_range(50.0, 335.0);
+        let y_pos = self.rng.randf_range(55.0, 340.0);
         flower_node.set_position(Vector2::new(x_pos as f32, y_pos as f32));
 
         flower_y_sort.add_child(flower_node, false);
@@ -198,6 +234,26 @@ impl Game {
                     .assume_safe()
             };
             button.emit_signal("pressed", &[]);
+        }
+
+        if message.contains("fast") {
+            let flower_timer = unsafe {
+                base.get_node_as::<Timer>("FlowerTimer")
+                    .expect("Game should have an FlowerTimer.")
+            };
+            flower_timer.set_wait_time(0.2);
+
+            let waste_timer = unsafe {
+                base.get_node_as::<Timer>("WasteTimer")
+                    .expect("Game should have an WasteTimer.")
+            };
+            waste_timer.set_wait_time(0.2);
+
+            let ant_timer = unsafe {
+                base.get_node_as::<Timer>("AntTimer")
+                    .expect("Game should have an AntTimer.")
+            };
+            ant_timer.set_wait_time(0.2);
         }
     }
 
