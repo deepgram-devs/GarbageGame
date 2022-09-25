@@ -1,7 +1,8 @@
+use super::game::load_audio_stream;
 use super::mushroom::Mushroom;
 use super::waste::{State as WasteState, Waste};
 
-use gdnative::api::{AnimatedSprite, KinematicBody2D, PinJoint2D};
+use gdnative::api::{AnimatedSprite, AudioStreamPlayer2D, KinematicBody2D, PinJoint2D};
 use gdnative::prelude::*;
 
 use std::cell::RefCell;
@@ -198,6 +199,21 @@ impl Ant {
 
                 // TODO maybe store joint in state?
                 base.add_child(joint, false);
+
+                // Play a sound effect! TODO: figure out how to preload...
+                let audio_stream_player = unsafe {
+                    base.get_node_as::<AudioStreamPlayer2D>("WasteObtainStreamPlayer")
+                        .expect(
+                            "Ant should have an AudioStreamPlayer2D named WasteObtainStreamPlayer.",
+                        )
+                };
+                if let Some(audio_stream) = load_audio_stream("res://Assets/Sfx/waste_obtain.wav") {
+                    let audio_stream = unsafe { audio_stream.assume_shared() };
+                    if !audio_stream_player.is_playing() {
+                        audio_stream_player.set_stream(audio_stream);
+                        audio_stream_player.play(0.0);
+                    }
+                }
 
                 self.state = State::GoingToMushroom(Rc::clone(waste));
             }

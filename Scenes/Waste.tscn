@@ -43,4 +43,9 @@ playing = true
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource( 1 )
 
+[node name="WasteExplodeStreamPlayer" type="AudioStreamPlayer2D" parent="."]
+
+[node name="WasteFallStreamPlayer" type="AudioStreamPlayer2D" parent="."]
+volume_db = -6.0
+
 [connection signal="animation_finished" from="AnimatedSprite" to="." method="on_animated_sprite_animation_finished"]

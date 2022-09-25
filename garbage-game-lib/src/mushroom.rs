@@ -1,4 +1,6 @@
+use super::game::load_audio_stream;
 use super::waste::{State as WasteState, Waste};
+
 use gdnative::api::*;
 use gdnative::prelude::*;
 
@@ -86,6 +88,21 @@ impl Mushroom {
             animated_sprite.set_frame(0);
             animated_sprite.set_visible(true);
             animated_sprite.play("excreting", false);
+        }
+
+        // Play a sound effect! TODO: figure out how to preload...
+        let audio_stream_player = unsafe {
+            base.get_node_as::<AudioStreamPlayer2D>("MushroomJiggleStreamPlayer")
+                .expect(
+                    "Mushroom should have an AudioStreamPlayer2D named MushroomJiggleStreamPlayer.",
+                )
+        };
+        if let Some(audio_stream) = load_audio_stream("res://Assets/Sfx/mushroom_jiggle.wav") {
+            let audio_stream = unsafe { audio_stream.assume_shared() };
+            if !audio_stream_player.is_playing() {
+                audio_stream_player.set_stream(audio_stream);
+                audio_stream_player.play(0.0);
+            }
         }
     }
 

@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/Unsustainable Turtle.ogg-e3d8815235fb5c6c265a36836df1ff9d.oggstr"
+
+[deps]
+
+source_file="res://Assets/Music/Unsustainable Turtle.ogg"
+dest_files=[ "res://.import/Unsustainable Turtle.ogg-e3d8815235fb5c6c265a36836df1ff9d.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

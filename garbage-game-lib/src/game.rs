@@ -1,4 +1,6 @@
-use gdnative::api::{Area2D, GlobalConstants, RandomNumberGenerator, RigidBody2D, YSort};
+use gdnative::api::{
+    Area2D, AudioStream, GlobalConstants, RandomNumberGenerator, RigidBody2D, YSort,
+};
 use gdnative::prelude::*;
 
 use super::ant::{Ant, State as AntState};
@@ -342,4 +344,10 @@ pub fn load_scene(path: &str) -> Option<Ref<PackedScene, ThreadLocal>> {
     let scene = ResourceLoader::godot_singleton().load(path, "", false)?;
     let scene = unsafe { scene.assume_thread_local() };
     scene.cast::<PackedScene>()
+}
+
+pub fn load_audio_stream(path: &str) -> Option<Ref<AudioStream, ThreadLocal>> {
+    let resource = ResourceLoader::godot_singleton().load(path, "", false)?;
+    let resource = unsafe { resource.assume_thread_local() };
+    resource.cast::<AudioStream>()
 }

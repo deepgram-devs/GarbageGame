@@ -1,4 +1,6 @@
-use gdnative::api::{AnimatedSprite, RandomNumberGenerator, RigidBody2D};
+use super::game::load_audio_stream;
+
+use gdnative::api::{AnimatedSprite, AudioStreamPlayer2D, RandomNumberGenerator, RigidBody2D};
 use gdnative::prelude::*;
 
 pub(crate) enum State {
@@ -28,6 +30,22 @@ impl Waste {
 #[methods]
 impl Waste {
     #[method]
+    fn _ready(&mut self, #[base] base: &RigidBody2D) {
+        // Play a sound effect! TODO: figure out how to preload...
+        let audio_stream_player = unsafe {
+            base.get_node_as::<AudioStreamPlayer2D>("WasteFallStreamPlayer")
+                .expect("Waste should have an AudioStreamPlayer2D named WasteFallStreamPlayer.")
+        };
+        if let Some(audio_stream) = load_audio_stream("res://Assets/Sfx/waste_fall.wav") {
+            let audio_stream = unsafe { audio_stream.assume_shared() };
+            if !audio_stream_player.is_playing() {
+                audio_stream_player.set_stream(audio_stream);
+                audio_stream_player.play(0.0);
+            }
+        }
+    }
+
+    #[method]
     fn _physics_process(&mut self, #[base] base: &RigidBody2D, _delta: f32) {
         if let State::Falling(distance) = self.state {
             if base.position().y > distance {
@@ -51,6 +69,19 @@ impl Waste {
                 .expect("Waste should have an AnimatedSprite.")
         };
         animated_sprite.play("explosion", false);
+
+        // Play a sound effect! TODO: figure out how to preload...
+        let audio_stream_player = unsafe {
+            base.get_node_as::<AudioStreamPlayer2D>("WasteExplodeStreamPlayer")
+                .expect("Waste should have an AudioStreamPlayer2D named WasteExplodeStreamPlayer.")
+        };
+        if let Some(audio_stream) = load_audio_stream("res://Assets/Sfx/waste_explode.wav") {
+            let audio_stream = unsafe { audio_stream.assume_shared() };
+            if !audio_stream_player.is_playing() {
+                audio_stream_player.set_stream(audio_stream);
+                audio_stream_player.play(0.0);
+            }
+        }
     }
 
     #[method]
