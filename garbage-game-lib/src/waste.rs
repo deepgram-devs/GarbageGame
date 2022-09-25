@@ -1,4 +1,4 @@
-use gdnative::api::{RandomNumberGenerator, RigidBody2D};
+use gdnative::api::{AnimatedSprite, RandomNumberGenerator, RigidBody2D};
 use gdnative::prelude::*;
 
 pub(crate) enum State {
@@ -41,6 +41,26 @@ impl Waste {
 
                 self.state = State::Grounded;
             }
+        }
+    }
+
+    #[method]
+    pub fn explode(&mut self, #[base] base: &RigidBody2D) {
+        let animated_sprite = unsafe {
+            base.get_node_as::<AnimatedSprite>("AnimatedSprite")
+                .expect("Waste should have an AnimatedSprite.")
+        };
+        animated_sprite.play("explosion", false);
+    }
+
+    #[method]
+    pub fn on_animated_sprite_animation_finished(&mut self, #[base] base: &RigidBody2D) {
+        let animated_sprite = unsafe {
+            base.get_node_as::<AnimatedSprite>("AnimatedSprite")
+                .expect("Waste should have an AnimatedSprite.")
+        };
+        if animated_sprite.animation() == GodotString::from("explosion") {
+            base.queue_free();
         }
     }
 }

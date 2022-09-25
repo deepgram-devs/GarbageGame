@@ -1,6 +1,6 @@
 use super::waste::{State as WasteState, Waste};
 
-use gdnative::api::{KinematicBody2D, PinJoint2D};
+use gdnative::api::{AnimatedSprite, KinematicBody2D, PinJoint2D};
 use gdnative::prelude::*;
 
 use std::cell::RefCell;
@@ -73,11 +73,18 @@ impl Ant {
             State::GoingToMushroom(waste) => {
                 // TODO store mushroom position somewhere (globally? or get it from the Mushroom object itself)
                 let mushroom_position = Vector2::new(320.0, 204.0);
-                let waste = unsafe { waste.borrow().base().assume_safe() };
+                let waste_rigid_body_2d = unsafe { waste.borrow().base().assume_safe() };
+                let waste_instance = unsafe { waste.borrow().assume_safe() };
 
                 // TODO: this is a kind of hacky way of asking "is the waste close to the mushroom"
-                if waste.global_position().distance_to(mushroom_position) < 50.0 {
-                    waste.queue_free();
+                if waste_rigid_body_2d
+                    .global_position()
+                    .distance_to(mushroom_position)
+                    < 50.0
+                {
+                    waste_instance
+                        .map_mut(|waste, _| waste.explode(&waste_rigid_body_2d))
+                        .expect("Unable to call Waste's destroy method.");
                     for child in base.get_children().into_iter() {
                         if let Some(joint) = child.to_object::<PinJoint2D>() {
                             unsafe { joint.assume_safe() }.queue_free();
@@ -113,12 +120,26 @@ impl Ant {
             false,
         );
 
+        // We will alter the animation based on the ant's corrected/final velocity
+        let animated_sprite = unsafe {
+            base.get_node_as::<AnimatedSprite>("AnimatedSprite")
+                .expect("Ant should have an AnimatedSprite.")
+        };
+
         // This doesn't look totally right :thinking:
         if returned_velocity != Vector2::ZERO {
             let inverted_returned_velocity =
                 Vector2::new(returned_velocity.x, -returned_velocity.y);
 
             base.set_rotation(inverted_returned_velocity.angle() as f64);
+
+            let animated_sprite = unsafe {
+                base.get_node_as::<AnimatedSprite>("AnimatedSprite")
+                    .expect("Waste should have an AnimatedSprite.")
+            };
+            animated_sprite.play("moving", false);
+        } else {
+            animated_sprite.play("idle", false);
         }
 
         let mut reached_waste = false;
