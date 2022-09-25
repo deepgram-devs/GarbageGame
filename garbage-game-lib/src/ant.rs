@@ -1,3 +1,4 @@
+use super::mushroom::Mushroom;
 use super::waste::{State as WasteState, Waste};
 
 use gdnative::api::{AnimatedSprite, KinematicBody2D, PinJoint2D};
@@ -25,6 +26,7 @@ pub(crate) enum State {
 pub struct Ant {
     pub(crate) state: State,
     last_going_to_area_state: Option<State>,
+    pub(crate) mushroom: Option<Instance<Mushroom>>,
 }
 
 impl Ant {
@@ -33,7 +35,13 @@ impl Ant {
         Ant {
             state: State::Idle,
             last_going_to_area_state: None,
+            mushroom: None,
         }
+    }
+
+    pub(crate) fn notice_mushroom(&mut self, mushroom: TInstance<Mushroom>) {
+        let mushroom = mushroom.claim();
+        self.mushroom = Some(mushroom);
     }
 
     pub(crate) fn seek_waste(&mut self, waste: TInstance<Waste>) {
@@ -71,42 +79,55 @@ impl Ant {
                 }
             }
             State::GoingToMushroom(waste) => {
-                // TODO store mushroom position somewhere (globally? or get it from the Mushroom object itself)
-                let mushroom_position = Vector2::new(320.0, 204.0);
-                let waste_rigid_body_2d = unsafe { waste.borrow().base().assume_safe() };
-                let waste_instance = unsafe { waste.borrow().assume_safe() };
+                match &self.mushroom {
+                    Some(mushroom) => {
+                        let mushroom = unsafe { mushroom.assume_safe() };
 
-                // TODO: this is a kind of hacky way of asking "is the waste close to the mushroom"
-                if waste_rigid_body_2d
-                    .global_position()
-                    .distance_to(mushroom_position)
-                    < 50.0
-                {
-                    waste_instance
-                        .map_mut(|waste, _| waste.explode(&waste_rigid_body_2d))
-                        .expect("Unable to call Waste's destroy method.");
-                    for child in base.get_children().into_iter() {
-                        if let Some(joint) = child.to_object::<PinJoint2D>() {
-                            unsafe { joint.assume_safe() }.queue_free();
+                        let mushroom_position = mushroom
+                            .map(|_mushroom, mushroom_base| mushroom_base.global_position())
+                            .expect("Unable to get Mushroom's global position.");
+                        let waste_rigid_body_2d = unsafe { waste.borrow().base().assume_safe() };
+                        let waste_instance = unsafe { waste.borrow().assume_safe() };
+
+                        // TODO: this is a kind of hacky way of asking "is the waste close to the mushroom"
+                        if waste_rigid_body_2d
+                            .global_position()
+                            .distance_to(mushroom_position)
+                            < 50.0
+                        {
+                            waste_instance
+                                .map_mut(|waste, _| waste.explode(&waste_rigid_body_2d))
+                                .expect("Unable to call Waste's destroy method.");
+                            for child in base.get_children().into_iter() {
+                                if let Some(joint) = child.to_object::<PinJoint2D>() {
+                                    unsafe { joint.assume_safe() }.queue_free();
+                                }
+                            }
+
+                            // Trigger the Mushroom to jiggle
+                            mushroom
+                                .map(|mushroom, mushroom_base| mushroom.jiggle(&mushroom_base))
+                                .expect("Should be able to make the Mushroom jiggle.");
+
+                            // Don't just stay at the Mushroom - go back to the last area this ant was commanded to go
+                            // if the ant hasn't been commanded to go anywhere in the past, make it idle
+                            if let Some(last_going_to_area_state) = &self.last_going_to_area_state {
+                                // this looks funny, but I did want to store the previous _state_, not just the previous _destination_
+                                if let State::GoingToArea(destination) = last_going_to_area_state {
+                                    self.state = State::GoingToArea(destination.clone());
+                                }
+                            } else {
+                                self.state = State::Idle;
+                            }
+
+                            Vector2::ZERO
+                        } else {
+                            let direction = mushroom_position - base.global_position();
+                            let direction = direction.normalized();
+                            direction * SPEED
                         }
                     }
-
-                    // Don't just stay at mushroom - go back to the last area this ant was commanded to go
-                    // if the ant hasn't been commanded to go anywhere in the past, make it idle
-                    if let Some(last_going_to_area_state) = &self.last_going_to_area_state {
-                        // this looks funny, but I did want to store the previous _state_, not just the previous _destination_
-                        if let State::GoingToArea(destination) = last_going_to_area_state {
-                            self.state = State::GoingToArea(destination.clone());
-                        }
-                    } else {
-                        self.state = State::Idle;
-                    }
-
-                    Vector2::ZERO
-                } else {
-                    let direction = mushroom_position - base.global_position();
-                    let direction = direction.normalized();
-                    direction * SPEED
+                    None => Vector2::ZERO,
                 }
             }
             State::Idle => Vector2::ZERO,

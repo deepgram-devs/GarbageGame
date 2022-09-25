@@ -15,7 +15,7 @@ impl Mushroom {
 #[methods]
 impl Mushroom {
     #[method]
-    fn on_area_2d_body_entered(&self, body: Ref<PhysicsBody2D>) {
+    fn on_area_2d_body_entered(&self, #[base] base: &Node2D, body: Ref<PhysicsBody2D>) {
         let body = unsafe { body.assume_safe() };
         if body.is_in_group("Flower") {
             body.queue_free();
@@ -45,8 +45,56 @@ impl Mushroom {
                 .expect("Could not check the state of Waste.");
 
             if waste_can_be_destroyed {
-                waste.queue_free()
+                waste.queue_free();
+
+                self.jiggle(base);
             }
         }
+    }
+
+    #[method]
+    fn on_jiggle_timer_timeout(&self, #[base] base: &Node2D) {
+        let animated_sprite = unsafe {
+            base.get_node_as::<AnimatedSprite>("MushroomHead")
+                .expect("Mushroom should have an AnimatedSprite named MushroomHead.")
+        };
+        animated_sprite.play("idle", false);
+    }
+
+    #[method]
+    pub fn jiggle(&self, #[base] base: &Node2D) {
+        let animated_sprite = unsafe {
+            base.get_node_as::<AnimatedSprite>("MushroomHead")
+                .expect("Mushroom should have an AnimatedSprite named MushroomHead.")
+        };
+        animated_sprite.play("jiggle", false);
+
+        let jiggle_timer = unsafe {
+            base.get_node_as::<Timer>("JiggleTimer")
+                .expect("Mushroom should have a Timer named JiggleTimer.")
+        };
+        jiggle_timer.start(0.2);
+
+        // TODO: the mushroom spores should probably be a separate object that we instance
+        // because as it is, only one mushroom spore animation can happen at a time
+        // even if the mushroom is hit twice in quick succession
+        let animated_sprite = unsafe {
+            base.get_node_as::<AnimatedSprite>("MushroomSpores")
+                .expect("Mushroom should have an AnimatedSprite named MushroomSpores.")
+        };
+        if !animated_sprite.is_visible() {
+            animated_sprite.set_frame(0);
+            animated_sprite.set_visible(true);
+            animated_sprite.play("excreting", false);
+        }
+    }
+
+    #[method]
+    pub fn on_mushroom_spores_animation_finished(&mut self, #[base] base: &Node2D) {
+        let animated_sprite = unsafe {
+            base.get_node_as::<AnimatedSprite>("MushroomSpores")
+                .expect("Mushroom should have an AnimatedSprite named MushroomSpores.")
+        };
+        animated_sprite.set_visible(false);
     }
 }

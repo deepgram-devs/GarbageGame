@@ -2,6 +2,7 @@ use gdnative::api::{Area2D, GlobalConstants, RandomNumberGenerator, RigidBody2D,
 use gdnative::prelude::*;
 
 use super::ant::{Ant, State as AntState};
+use super::mushroom::Mushroom;
 use super::waste::{State as WasteState, Waste};
 
 #[derive(NativeClass)]
@@ -162,6 +163,14 @@ impl Game {
         let scene = unsafe { scene.assume_safe() };
         let ants = scene.get_nodes_in_group("Ant");
 
+        let mushroom = unsafe {
+            base.get_node_as::<Node2D>("Mushroom")
+                .expect("Game should have a Mushroom.")
+        };
+        let mushroom = mushroom
+            .cast_instance::<Mushroom>()
+            .expect("This should be a Mushroom.");
+
         if ants.len() >= self.ant_num_max {
             return;
         }
@@ -178,6 +187,16 @@ impl Game {
 
         let x_pos = self.rng.randf_range(300.0, 400.0);
         ant_node.set_position(Vector2::new(x_pos as f32, 300.0));
+
+        let ant_instance = ant_node
+            .cast::<KinematicBody2D>()
+            .expect("This should be a KinematicBody2D")
+            .cast_instance::<Ant>()
+            .expect("This should be an ant.");
+
+        ant_instance
+            .map_mut(|ant_instance, _| ant_instance.notice_mushroom(mushroom))
+            .expect("Unable to give the Ant a reference to a Mushroom.");
 
         base.add_child(new_ant, false);
     }

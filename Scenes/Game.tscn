@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=2]
+[gd_scene load_steps=31 format=2]
 
 [ext_resource path="res://Assets/turtileset.png" type="Texture" id=1]
 [ext_resource path="res://Scenes/Game.gdns" type="Script" id=2]
@@ -7,10 +7,16 @@
 [ext_resource path="res://Assets/UI/button_east.png" type="Texture" id=5]
 [ext_resource path="res://Assets/UI/button_south.png" type="Texture" id=6]
 [ext_resource path="res://Assets/UI/button_north.png" type="Texture" id=7]
-[ext_resource path="res://Assets/turtle_fin.png" type="Texture" id=8]
+[ext_resource path="res://Assets/turtle_front_fin.png" type="Texture" id=8]
 [ext_resource path="res://Scenes/Mushroom.tscn" type="PackedScene" id=9]
 [ext_resource path="res://Assets/turtle_head.png" type="Texture" id=10]
 [ext_resource path="res://Assets/grass_patch.png" type="Texture" id=11]
+[ext_resource path="res://Assets/turtle_back_fin.png" type="Texture" id=12]
+[ext_resource path="res://Assets/turtle_tail.png" type="Texture" id=13]
+[ext_resource path="res://Assets/UI/button_east_pressed.png" type="Texture" id=14]
+[ext_resource path="res://Assets/UI/button_south_pressed.png" type="Texture" id=15]
+[ext_resource path="res://Assets/UI/button_north_pressed.png" type="Texture" id=16]
+[ext_resource path="res://Assets/UI/button_west_pressed.png" type="Texture" id=17]
 
 [sub_resource type="ConcavePolygonShape2D" id=5]
 segments = PoolVector2Array( 16, 0, 16, 4, 16, 4, 4, 4, 4, 4, 4, 16, 4, 16, 0, 16, 0, 16, 0, 16, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0 )
@@ -319,7 +325,7 @@ radius = 32.0
 [node name="Game" type="Node2D"]
 script = ExtResource( 2 )
 
-[node name="TurtleFin" type="Sprite" parent="."]
+[node name="TurtleFinDownLeft" type="Sprite" parent="."]
 position = Vector2( 210, 400 )
 texture = ExtResource( 8 )
 
@@ -327,6 +333,15 @@ texture = ExtResource( 8 )
 position = Vector2( 210, 32 )
 scale = Vector2( 1, -1 )
 texture = ExtResource( 8 )
+
+[node name="TurtleFinUpRight" type="Sprite" parent="."]
+position = Vector2( 460, 24 )
+scale = Vector2( 1, -1 )
+texture = ExtResource( 12 )
+
+[node name="TurtleFinDownRight" type="Sprite" parent="."]
+position = Vector2( 460, 408 )
+texture = ExtResource( 12 )
 
 [node name="TileMap" type="TileMap" parent="."]
 position = Vector2( 0, -32 )
@@ -338,6 +353,10 @@ tile_data = PoolIntArray( 327685, 0, 0, 327686, 1, 0, 327687, 1, 0, 327688, 1, 0
 [node name="TurtleHead" type="Sprite" parent="."]
 position = Vector2( 64, 204 )
 texture = ExtResource( 10 )
+
+[node name="TurtleTail" type="Sprite" parent="."]
+position = Vector2( 574.5, 204 )
+texture = ExtResource( 13 )
 
 [node name="AreaN" type="Area2D" parent="."]
 position = Vector2( 320, 84 )
@@ -400,6 +419,7 @@ margin_top = 21.0
 margin_right = 78.0
 margin_bottom = 51.0
 texture_normal = ExtResource( 4 )
+texture_pressed = ExtResource( 17 )
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="CanvasLayer/MarginContainer/HBoxContainer"]
 margin_left = 281.0
@@ -412,12 +432,14 @@ margin_top = 4.0
 margin_right = 78.0
 margin_bottom = 34.0
 texture_normal = ExtResource( 7 )
+texture_pressed = ExtResource( 16 )
 
 [node name="ButtonS" type="TextureButton" parent="CanvasLayer/MarginContainer/HBoxContainer/VBoxContainer2"]
 margin_top = 38.0
 margin_right = 78.0
 margin_bottom = 68.0
 texture_normal = ExtResource( 6 )
+texture_pressed = ExtResource( 15 )
 
 [node name="VBoxContainer3" type="VBoxContainer" parent="CanvasLayer/MarginContainer/HBoxContainer"]
 margin_left = 363.0
@@ -430,6 +452,7 @@ margin_top = 21.0
 margin_right = 78.0
 margin_bottom = 51.0
 texture_normal = ExtResource( 5 )
+texture_pressed = ExtResource( 14 )
 
 [node name="Mushroom" parent="." instance=ExtResource( 9 )]
 position = Vector2( 320, 208 )
