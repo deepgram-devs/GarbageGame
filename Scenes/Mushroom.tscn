@@ -42,6 +42,7 @@ animations = [ {
 } ]
 
 [node name="Mushroom" type="Node2D"]
+z_index = 1
 script = ExtResource( 1 )
 
 [node name="MushroomBase" type="Sprite" parent="."]
