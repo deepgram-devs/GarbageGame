@@ -55,7 +55,7 @@ impl Waste {
 
             if base.position().y > distance {
                 base.set_gravity_scale(0.0);
-                base.set_linear_damp(10.0);
+                base.set_linear_damp(1000.0);
                 base.set_collision_mask_bit(0, true); // tilemap
                 base.set_collision_mask_bit(1, true); // ants
                 base.set_collision_mask_bit(2, true); // waste on the ground
