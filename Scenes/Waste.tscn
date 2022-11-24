@@ -52,5 +52,6 @@ volume_db = -6.0
 [node name="Shadow" type="Sprite" parent="."]
 z_index = -4
 texture = ExtResource( 10 )
+offset = Vector2( 0, 12 )
 
 [connection signal="animation_finished" from="AnimatedSprite" to="." method="on_animated_sprite_animation_finished"]
