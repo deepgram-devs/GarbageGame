@@ -48,9 +48,14 @@ impl Waste {
     #[method]
     fn _physics_process(&mut self, #[base] base: &RigidBody2D, _delta: f32) {
         if let State::Falling(distance) = self.state {
+            let shadow = unsafe {
+                base.get_node_as::<Sprite>("Shadow")
+                    .expect("Waste should have a Shadow.")
+            };
+
             if base.position().y > distance {
                 base.set_gravity_scale(0.0);
-                base.set_linear_damp(10.0);
+                base.set_linear_damp(1000.0);
                 base.set_collision_mask_bit(0, true); // tilemap
                 base.set_collision_mask_bit(1, true); // ants
                 base.set_collision_mask_bit(2, true); // waste on the ground
@@ -58,6 +63,9 @@ impl Waste {
                 base.set_collision_layer_bit(2, true); // waste on the ground
 
                 self.state = State::Grounded;
+                shadow.set_visible(false);
+            } else {
+                shadow.set_position(Vector2::new(0.0, distance - base.position().y));
             }
         }
     }
